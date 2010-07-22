@@ -1,0 +1,88 @@
+pcap generation tools
+--------------------
+
+0. Requirements
+1. Using pgt
+2. Using pft
+3. Using pftlib from python
+
+--[ 0. Requirements
+
+The pgt tools require python 2.6 and scapy (I used version 2.1.0).
+
+--[ 1. Using pgt
+
+Using pgt is relatively straight forward:
+
+# Generate the file we want to simulate captures for
+
+$ echo '<html><head><title>evil exploit</title></head><body>t</body></html>' > evil.html
+
+# Ask it to generate the pcaps for us
+
+$ python pgt.py evil.html 
+[*] Doing FTP
+[*] output/evil.html/FTP_upload_active.pcap...
+[*] output/evil.html/FTP_upload_passive.pcap...
+[*] output/evil.html/FTP_download_active.pcap...
+[*] output/evil.html/FTP_download_passive.pcap...
+[*] Doing Email
+[*] output/evil.html/POP3_base64.pcap...
+[*] output/evil.html/POP3_7or8bit.pcap...
+[*] output/evil.html/POP3_quopri.pcap...
+[*] output/evil.html/IMAP_base64.pcap...
+[*] output/evil.html/IMAP_7or8bit.pcap...
+[*] output/evil.html/IMAP_quopri.pcap...
+[*] output/evil.html/SMTP_base64.pcap...
+[*] output/evil.html/SMTP_7or8bit.pcap...
+[*] output/evil.html/SMTP_quopri.pcap...
+[*] Doing HTTP
+[*] output/evil.html/HTTP_GET_raw_raw.pcap ...
+[*] output/evil.html/HTTP_GET_raw_chunked.pcap ...
+[*] output/evil.html/HTTP_GET_gzip_raw.pcap ...
+[*] output/evil.html/HTTP_GET_gzip_chunked.pcap ...
+[*] output/evil.html/HTTP_GET_deflate_raw.pcap ...
+[*] output/evil.html/HTTP_GET_deflate_chunked.pcap ...
+[*] output/evil.html/HTTP_POST_raw_raw.pcap ...
+[*] output/evil.html/HTTP_POST_raw_chunked.pcap ...
+[*] output/evil.html/HTTP_POST_gzip_raw.pcap ...
+[*] output/evil.html/HTTP_POST_gzip_chunked.pcap ...
+[*] output/evil.html/HTTP_POST_deflate_raw.pcap ...
+[*] output/evil.html/HTTP_POST_deflate_chunked.pcap ...
+
+And that's it, it's generated a bunch of pcaps for us, and applied a bunch of
+common encoding.
+
+--[ 2. Using pft
+
+pft can create brand new pcaps from a file. This is very useful when the 
+pcap you have been given doesn't have TCP handshake / socket shutdown, 
+bad checksums, missing ack's, etc.
+
+To prepare the input file, use wireshark on the bad pcap, locate the tcp stream
+you would like to rebuild, right click on it, select "follow this tcp stream",
+then display it as C arrays. Click the save as button, and save the C arrays
+somewhere. 
+
+Then run fgt.py as:
+
+$ python fgt.py -w --port <destination port> carrays
+
+and it will generate a carrays.pcap for you.
+
+--[ 3. Using pgtlib from python
+
+Using pgtlib via python is relatively straight forward:
+
+
+>>> from pgtlib import * 			# Import functions/classes
+>>> pcap = PCAP('output.pcap')			# create a new pcap file
+>>> conn = pcap.tcp_conn_to_server(8481) 	# create a new tcp stream to port 8481
+						# and write it to the above pcap 
+>>> conn.to_server("from client to server")	# send some data to the server 
+>>> conn.to_client("from server to client")	# send some data to the client
+>>> conn.finish()				# perform the fin/ack shutdown 
+						# sequence
+>>> pcap.close()				# close the pcap file
+
+

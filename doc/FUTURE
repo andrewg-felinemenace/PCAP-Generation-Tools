@@ -1,0 +1,38 @@
+pcap generation
+---------------
+
+NFS support:
+
+  Maybe add NFS support via hacking up www.citi.umich.edu/projects/nfsv4/pynfs/ 
+  If NFS4 is encrypted, examine NFS3 if possible. Add both if not an issue.
+
+SMB support:
+
+  Can hack up dionera's SMB python module to provide smb file open / read and
+  writes etc.
+
+  With that, we could have SMB pcap generation support, which will be good.
+
+File encoding:
+
+  Support different encoding options (maybe look at non standard gzip + base64
+  for email protocols, etc).
+
+TFTP support:
+
+  looks like it would be easy to use to http://sourceforge.net/projects/tftpy/
+  to implement the tftp protocol. much use? sometimes exploits will use tftp
+  to download executables and stuff, so maybe. (windows) 
+
+RCP protocol:
+
+  i doubt anyone actually uses this. maybe in rare exploit situations on
+  windows.
+
+
+pcap fixing
+-----------
+
+I'm not sure what could be done to improve this, except more robust parsing
+of input, and perhaps verifying output of wireshark from different versions.
+
