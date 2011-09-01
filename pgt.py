@@ -61,6 +61,10 @@ class HTTP:
 
 	def set_options(self, options):
 		self.http_port = options.http_port
+		if options.uri:
+			self.uri = options.uri
+		else:
+			self.uri = randtext()
 
 	def make_pcap(self, pcap, req, resp):
 		stream = pcap.tcp_conn_to_server(self.http_port)
@@ -116,7 +120,7 @@ class HTTP:
 		resp += data
 
 		pcap = PCAP(pcapname)
-		req = self.get_request.format(randtext(), host=pcap.server.ip)
+		req = self.get_request.format(self.uri, host=pcap.server.ip)
 		self.make_pcap(pcap, req, resp)
 		pcap.close()
 
@@ -142,7 +146,7 @@ class HTTP:
 		
 
 		pcap = PCAP(pcapname)
-		req = self.post_request.format(randtext(), data, host=pcap.server.ip, content_encoding=ce, transfer_encoding=te, content_length=cl)
+		req = self.post_request.format(self.uri, data, host=pcap.server.ip, content_encoding=ce, transfer_encoding=te, content_length=cl)
 		
 		content = randtext(max=64)
 		resp = self.post_response.format(content=content, content_length=len(content))
@@ -379,6 +383,7 @@ def parse_args(args):
 	parser.add_option("--imap-port", type="int", default=143, help="Port number for IMAP connections [default: %default]", metavar="PORT")
 	parser.add_option("--smtp-port", type="int", default=25, help="Port number for SMTP connections [default: %default]", metavar="PORT")
 	parser.add_option("--pop3-port", type="int", default=110, help="Port number for POP3 connections [default: %default]", metavar="PORT")
+	parser.add_option("-u","--uri",default=None,help="Specify a URI to download",metavar="URI")
 
 	return parser.parse_args(args)				
 
