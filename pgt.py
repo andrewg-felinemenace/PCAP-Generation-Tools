@@ -409,7 +409,7 @@ if __name__ == '__main__':
 		fo = FileObj(file)
 
 		try:
-			os.mkdir('output/{0}'.format(fo.filename))
+			os.makedirs('output/{0}'.format(fo.filename))
 		except OSError:
 			pass
 
