@@ -177,6 +177,7 @@ class TCPConn:
 class FileObj:
 	def __init__(self, filename):
 		self.filename = os.path.basename(filename)
+		self.dirname = os.path.dirname(filename)
 		self.filedata = open(filename, 'rb').read()
 	
 	def get_raw(self, prefix=""):
