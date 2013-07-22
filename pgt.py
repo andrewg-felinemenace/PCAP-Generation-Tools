@@ -10,6 +10,8 @@ at the moment, it implements smtp, imap, http, ftp, and pop3.
 import random
 from pgtlib import *
 
+import magic
+
 from optparse import OptionParser
 
 from email import encoders
@@ -28,7 +30,7 @@ class HTTP:
 
 	get_response = (
 		"HTTP/1.1 200 Ok\r\n"
-		"Content-Type: application/octet-stream\r\n"
+		"{content_type}"
 		"{content_encoding}"
 		"{transfer_encoding}"
 		"Server: Apache/2.0\r\n"
@@ -42,7 +44,7 @@ class HTTP:
 		"Accept-Encoding: gzip,deflate,compress\r\n"
 		"Keep-Alive: 300\r\n"
 		"Connection: keep-alive\r\n"
-		"Content-Type: application/x-www-form-urlencoded\r\n"
+		"{content_type}"
 		"{content_encoding}"
 		"{transfer_encoding}"
 		"{content_length}"
@@ -82,6 +84,7 @@ class HTTP:
 
 		max_size = (len(data) / 8) + 2
 
+
 		while offset < len(data):
 			count = random.randint(1, max_size)
 			piece = data[offset:offset+count]
@@ -98,10 +101,11 @@ class HTTP:
 	def make_content_length(self, data):
 		return "Content-Length: {0}\r\n".format(len(data))
 
-	def make_GET_pcap(self, pcapname, fileobj, content_encoding, transfer_encoding):
+	def make_GET_pcap(self, pcapname, fileobj, content_encoding, transfer_encoding, content_type):
 		ce = ""					# Content Encoding
 		te = ""					# Transfer Encoding
-		cl = ""
+		cl = ""					# Content-Length
+		ct = ""					# Content Type
 
 		fp = getattr(fileobj, 'get_{0}'.format(content_encoding))
 		data = fp()
@@ -114,9 +118,11 @@ class HTTP:
 			te = "Transfer-Encoding: {0}\r\n".format(transfer_encoding)
 			data = self.chunkify(data)
 		else:
-			cl = self.make_content_length(data)	
+			cl = self.make_content_length(data)
 
-		resp = self.get_response.format(content_encoding=ce, transfer_encoding=te, content_length=cl)
+		ct = "Content-Type: {0}\r\n".format(content_type)
+
+		resp = self.get_response.format(content_encoding=ce, transfer_encoding=te, content_length=cl, content_type=ct)
 		resp += data
 
 		pcap = PCAP(pcapname)
@@ -124,10 +130,11 @@ class HTTP:
 		self.make_pcap(pcap, req, resp)
 		pcap.close()
 
-	def make_POST_pcap(self, pcapname, fileobj, content_encoding, transfer_encoding):
+	def make_POST_pcap(self, pcapname, fileobj, content_encoding, transfer_encoding, content_type):
 		ce = ""
 		te = ""
 		cl = ""
+		ct = ""
 
 		prefix = randtext() + "="
 
@@ -143,11 +150,12 @@ class HTTP:
 			data = self.chunkify(data)
 		else:
 			cl = self.make_content_length(data)
-		
+
+		ct = "Content-Type: {0}\r\n".format(content_type)
 
 		pcap = PCAP(pcapname)
-		req = self.post_request.format(self.uri, data, host=pcap.server.ip, content_encoding=ce, transfer_encoding=te, content_length=cl)
-		
+		req = self.post_request.format(self.uri, data, host=pcap.server.ip, content_encoding=ce, transfer_encoding=te, content_length=cl, content_type=ct)
+
 		content = randtext(max=64)
 		resp = self.post_response.format(content=content, content_length=len(content))
 		self.make_pcap(pcap, req, resp)
@@ -155,6 +163,8 @@ class HTTP:
 
 
 	def run(self, fileobj):
+		mimetype = magic.Magic(mime=True)
+		contenttype = mimetype.from_file(fileobj.dirname+'/'+fileobj.filename)
 
 		for method in [ 'GET', 'POST' ]:
 			for encoding in [ 'raw', 'gzip', 'deflate' ]:
@@ -162,7 +172,7 @@ class HTTP:
 					pcapname = 'output/{0}/HTTP_{1}_{2}_{3}.pcap'.format(fileobj.filename, method, encoding, transfer)
 					print "[*] {0} ...".format(pcapname)
 					fp = getattr(self, 'make_{0}_pcap'.format(method))
-					fp(pcapname, fileobj, encoding, transfer)
+					fp(pcapname, fileobj, encoding, transfer, contenttype)
 
 
 
@@ -270,8 +280,11 @@ class Email:
 		base['From'] = "{0}@{1}.com".format(randtext(), randtext())
 		base['To'] = "{0}@{1}.com".format(randtext(), randtext())
 		base['Subject'] = "{0} {1} {2} {3}".format(randtext(), randtext(), randtext(), randtext())
-				
-		msg = MIMEBase('application', 'octet-stream')
+
+		mimetype = magic.Magic(mime=True)
+		contenttype = mimetype.from_file(fileobj.dirname+'/'+fileobj.filename).split('/')
+		msg = MIMEBase(contenttype[0], contenttype[1])
+
 		msg.set_payload(fileobj.get_raw())
 		msg.add_header('Content-Disposition', 'attachment', filename=randtext())
 
@@ -396,7 +409,7 @@ if __name__ == '__main__':
 		fo = FileObj(file)
 
 		try:
-			os.mkdir('output/{0}'.format(fo.filename))
+			os.makedirs('output/{0}'.format(fo.filename))
 		except OSError:
 			pass
 
