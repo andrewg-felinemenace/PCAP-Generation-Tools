@@ -68,7 +68,7 @@ class PCAP:
 		self.packets.append(pkt)
 
 	def tcp_conn_to_client(self, dport, sport = 0):
-		"""tcp_conn_to_client returns a TCPConn() object, where TCP streams come from self.server and go to self.client. 
+		"""tcp_conn_to_client returns a TCPConn() object, where TCP streams come from self.server and go to self.client.
 		This is useful when the server has to connect to the client, like in certain protocols (FTP active mode).
 		"""
 		assert(self.closed == False)
@@ -162,7 +162,7 @@ class TCPConn:
 			self.pcap.add_packet(pkt)
 
 	def to_server(self, data):
-		assert(self.closed == False) 
+		assert(self.closed == False)
 
 		for offset in range(0, len(data), 1200):
 			piece = data[offset:offset+1200]
@@ -177,11 +177,11 @@ class TCPConn:
 class FileObj:
 	def __init__(self, filename):
 		self.filename = os.path.basename(filename)
-		self.dirname = os.path.dirname(filename)
+		self.dirname = os.path.dirname(os.path.abspath(filename))
 		self.filedata = open(filename, 'rb').read()
-	
+
 	def get_raw(self, prefix=""):
-		return prefix + self.filedata	
+		return prefix + self.filedata
 
 	def get_gzip(self, prefix=""):
 		s = StringIO.StringIO()
@@ -196,4 +196,3 @@ class FileObj:
 
 	def get_deflate(self, prefix=""):
 		return self.get_zlib(prefix)
-
