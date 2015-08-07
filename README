@@ -8,7 +8,7 @@ pcap generation tools
 
 --[ 0. Requirements
 
-The pgt tools require python 2.6 and scapy (I used version 2.1.0).
+The pgt tools require python 2.6, python-magic and scapy (I used version 2.1.0).
 
 --[ 1. Using pgt
 
