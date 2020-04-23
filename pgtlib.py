@@ -11,7 +11,11 @@ import StringIO
 import os
 
 def randtext(min=3, max=12):
-	chars = range(0x41, 0x5a) + range(0x61, 0x7a) + range(0x30, 0x39)
+	#chars = range(0x41, 0x5a) + range(0x61, 0x7a) + range(0x30, 0x39)
+	#since I am seeing below error, changed to different representaton
+	#TypeError: unsupported operand type(s) for +: 'xrange' and 'xrange'
+	chars = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, \
+		63, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89]
 	while(max > len(chars)):
 		chars += chars
 
